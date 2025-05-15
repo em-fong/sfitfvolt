@@ -1,6 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { initializeStorage } from "./storage";
+import { pool } from "./db";
 
 const app = express();
 app.use(express.json());
@@ -37,6 +39,13 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Initialize database and seed if needed
+  try {
+    await initializeStorage();
+  } catch (error) {
+    console.error("Failed to initialize storage:", error);
+  }
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -66,5 +75,18 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+  });
+  
+  // Clean up database connection on server shutdown
+  process.on('SIGTERM', async () => {
+    console.log('SIGTERM signal received: closing database pool');
+    await pool.end();
+    process.exit(0);
+  });
+  
+  process.on('SIGINT', async () => {
+    console.log('SIGINT signal received: closing database pool');
+    await pool.end();
+    process.exit(0);
   });
 })();
