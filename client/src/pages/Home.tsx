@@ -249,7 +249,18 @@ export default function Home() {
 
           {/* Upcoming Events Section */}
           <div className="event-list space-y-4 mb-8">
-            <h2 className="text-lg font-semibold text-foreground mb-2">Upcoming Events</h2>
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="text-lg font-semibold text-foreground">Upcoming Events</h2>
+              <button 
+                onClick={() => navigate('/create-event')} 
+                className="flex items-center text-sm bg-primary text-white px-3 py-1.5 rounded-md hover:bg-primary/90 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
+                  <path d="M12 5v14M5 12h14"></path>
+                </svg>
+                New Event
+              </button>
+            </div>
             
             {upcomingEvents.length > 0 ? (
               // Upcoming event cards
