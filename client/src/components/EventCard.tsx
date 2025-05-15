@@ -20,7 +20,7 @@ export default function EventCard({ event, onSelect, isCurrent = false }: EventC
             {isCurrent && (
               <span className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded-full flex items-center">
                 <span className="inline-block w-1.5 h-1.5 bg-green-500 rounded-full mr-1 animate-pulse"></span>
-                Live
+                Active
               </span>
             )}
           </div>

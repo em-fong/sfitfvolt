@@ -10,7 +10,7 @@ export default function Home() {
   const { toast } = useToast();
   const [_, navigate] = useLocation();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [currentEvents, setCurrentEvents] = useState<(Event & {volunteerCount: number})[]>([]);
+  const [activeEvents, setActiveEvents] = useState<(Event & {volunteerCount: number})[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<(Event & {volunteerCount: number})[]>([]);
 
   const { data: events, isLoading, error } = useQuery<(Event & {volunteerCount: number})[]>({
@@ -26,8 +26,8 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // Helper function to determine if the event is happening now
-  const isEventHappeningNow = (event: Event): boolean => {
+  // Helper function to determine if the event is active
+  const isEventActive = (event: Event): boolean => {
     try {
       const now = currentTime;
       // Format the event date string (e.g., "May 15, 2023") and time (e.g., "9:00 AM - 12:00 PM")
@@ -78,22 +78,22 @@ export default function Home() {
     }
   };
 
-  // Sort events into current and upcoming when data changes or time updates
+  // Sort events into active and upcoming when data changes or time updates
   useEffect(() => {
     if (!events) return;
     
-    const current: (Event & {volunteerCount: number})[] = [];
+    const active: (Event & {volunteerCount: number})[] = [];
     const upcoming: (Event & {volunteerCount: number})[] = [];
     
     events.forEach(event => {
-      if (isEventHappeningNow(event)) {
-        current.push(event);
+      if (isEventActive(event)) {
+        active.push(event);
       } else {
         upcoming.push(event);
       }
     });
     
-    setCurrentEvents(current);
+    setActiveEvents(active);
     setUpcomingEvents(upcoming);
   }, [events, currentTime]);
 
@@ -134,19 +134,19 @@ export default function Home() {
         </div>
       ) : (
         <>
-          {/* Current Events Section */}
-          {currentEvents.length > 0 && (
+          {/* Active Events Section */}
+          {activeEvents.length > 0 && (
             <div className="event-list space-y-4 mb-8">
               <div className="bg-green-50 border border-green-100 rounded-md px-3 py-2 mb-3 flex items-center">
                 <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-                <h2 className="text-lg font-semibold text-green-700">Current Events</h2>
+                <h2 className="text-lg font-semibold text-green-700">Active Events</h2>
               </div>
               
               <div className="relative">
                 {/* Green highlight behind the card */}
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-green-500 rounded-l-md"></div>
                 
-                {currentEvents.map((event) => (
+                {activeEvents.map((event) => (
                   <div key={event.id} className="border-l-4 border-green-500 pl-3 mb-4">
                     <EventCard 
                       event={event} 
