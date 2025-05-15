@@ -1,11 +1,15 @@
 import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // API routes
-  app.get("/api/events", async (req, res) => {
+  // Setup auth middleware and routes
+  await setupAuth(app);
+  
+  // API routes - protected by auth
+  app.get("/api/events", isAuthenticated, async (req, res) => {
     try {
       const events = await storage.getEvents();
       
@@ -26,7 +30,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/events/:id", async (req, res) => {
+  app.get("/api/events/:id", isAuthenticated, async (req, res) => {
     try {
       const event = await storage.getEvent(Number(req.params.id));
       if (!event) {
@@ -39,7 +43,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/events/:id/stats", async (req, res) => {
+  app.get("/api/events/:id/stats", isAuthenticated, async (req, res) => {
     try {
       const eventId = Number(req.params.id);
       const stats = await storage.getEventStats(eventId);
@@ -49,7 +53,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/events/:id/volunteers", async (req, res) => {
+  app.get("/api/events/:id/volunteers", isAuthenticated, async (req, res) => {
     try {
       const eventId = Number(req.params.id);
       const volunteers = await storage.getVolunteers(eventId);
@@ -59,7 +63,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/volunteers/:id", async (req, res) => {
+  app.get("/api/volunteers/:id", isAuthenticated, async (req, res) => {
     try {
       const volunteer = await storage.getVolunteer(Number(req.params.id));
       if (!volunteer) {
@@ -72,27 +76,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/volunteers/:id/check-in", async (req, res) => {
+  app.post("/api/volunteers/:id/check-in", isAuthenticated, async (req: any, res) => {
     try {
-      const schema = z.object({
-        checkedInBy: z.string()
-      });
+      // Get the current user from the session
+      const userId = req.user.claims.sub;
+      const user = await storage.getUserByUsername(userId);
       
-      const parsedBody = schema.safeParse(req.body);
-      if (!parsedBody.success) {
-        return res.status(400).json({ message: "Invalid request body" });
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized user" });
       }
       
-      const { checkedInBy } = parsedBody.data;
+      // Use authenticated user's info for checkedInBy
+      const userName = user.firstName && user.lastName 
+        ? `${user.firstName} ${user.lastName}`
+        : (user.username || "Admin");
+      
       const volunteerId = Number(req.params.id);
       
-      const updatedVolunteer = await storage.checkInVolunteer(volunteerId, checkedInBy);
+      const updatedVolunteer = await storage.checkInVolunteer(volunteerId, userName);
       if (!updatedVolunteer) {
         return res.status(404).json({ message: "Volunteer not found" });
       }
       
       res.json(updatedVolunteer);
     } catch (error) {
+      console.error("Check-in error:", error);
       res.status(500).json({ message: "Failed to check in volunteer" });
     }
   });
