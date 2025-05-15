@@ -144,19 +144,19 @@ export default function CreateEvent() {
       // Convert form data to the format expected by the API
       const apiData = convertFormValuesToApiData(data);
       
-      await apiRequest('POST', '/api/events', apiData);
+      const newEvent = await apiRequest('POST', '/api/events', apiData);
 
       // Invalidate the events query to refresh the data
       await queryClient.invalidateQueries({ queryKey: ['/api/events'] });
 
       toast({
         title: "Success",
-        description: "Event created successfully!",
+        description: "Event created successfully! Now create shifts for your volunteers.",
         variant: "default",
       });
 
-      // Navigate back to the home page
-      navigate('/');
+      // Navigate to the create shifts page for this event
+      navigate(`/events/${newEvent.id}/create-shifts`);
     } catch (error) {
       console.error('Error creating event:', error);
       toast({
