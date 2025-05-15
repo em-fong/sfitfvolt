@@ -150,7 +150,8 @@ export default function Home() {
                   <div key={event.id} className="border-l-4 border-green-500 pl-3 mb-4">
                     <EventCard 
                       event={event} 
-                      onSelect={() => handleSelectEvent(event.id)} 
+                      onSelect={() => handleSelectEvent(event.id)}
+                      isCurrent={true}
                     />
                   </div>
                 ))}
