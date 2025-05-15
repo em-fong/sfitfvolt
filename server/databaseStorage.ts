@@ -114,13 +114,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getShiftsByDate(eventId: number, shiftDate: Date): Promise<Shift[]> {
-    return await db
+    // Convert the date to a string in YYYY-MM-DD format
+    const formattedDate = shiftDate.toISOString().split('T')[0];
+    
+    // Get all shifts for the event
+    const allShifts = await db
       .select()
       .from(shifts)
-      .where(and(
-        eq(shifts.eventId, eventId),
-        eq(shifts.shiftDate, shiftDate)
-      ));
+      .where(eq(shifts.eventId, eventId));
+    
+    // Filter by the date (manual filtering as a workaround for date comparison issues)
+    return allShifts.filter(shift => {
+      const shiftDateStr = new Date(shift.shiftDate).toISOString().split('T')[0];
+      return shiftDateStr === formattedDate;
+    });
   }
 
   async createShift(insertShift: InsertShift): Promise<Shift> {

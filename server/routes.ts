@@ -2,7 +2,7 @@ import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { insertEventSchema } from "../shared/schema";
+import { insertEventSchema, insertShiftSchema } from "../shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes
@@ -115,6 +115,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating event:", error);
       res.status(500).json({ message: "Failed to create event" });
+    }
+  });
+
+  // Shifts endpoints
+  app.get("/api/events/:eventId/shifts", async (req, res) => {
+    try {
+      const eventId = Number(req.params.eventId);
+      const shifts = await storage.getShifts(eventId);
+      res.json(shifts);
+    } catch (error) {
+      console.error("Error fetching shifts:", error);
+      res.status(500).json({ message: "Failed to fetch shifts" });
+    }
+  });
+
+  app.get("/api/events/:eventId/shifts/date/:date", async (req, res) => {
+    try {
+      const eventId = Number(req.params.eventId);
+      const dateStr = req.params.date; // Expected format: YYYY-MM-DD
+      const shiftDate = new Date(dateStr);
+      
+      if (isNaN(shiftDate.getTime())) {
+        return res.status(400).json({ message: "Invalid date format" });
+      }
+      
+      const shifts = await storage.getShiftsByDate(eventId, shiftDate);
+      res.json(shifts);
+    } catch (error) {
+      console.error("Error fetching shifts by date:", error);
+      res.status(500).json({ message: "Failed to fetch shifts" });
+    }
+  });
+
+  app.get("/api/shifts/:id", async (req, res) => {
+    try {
+      const shift = await storage.getShift(Number(req.params.id));
+      if (!shift) {
+        return res.status(404).json({ message: "Shift not found" });
+      }
+      
+      res.json(shift);
+    } catch (error) {
+      console.error("Error fetching shift:", error);
+      res.status(500).json({ message: "Failed to fetch shift" });
+    }
+  });
+
+  app.post("/api/shifts", async (req, res) => {
+    try {
+      const parsedBody = insertShiftSchema.safeParse(req.body);
+      if (!parsedBody.success) {
+        return res.status(400).json({ 
+          message: "Invalid shift data", 
+          errors: parsedBody.error.errors 
+        });
+      }
+      
+      const shiftData = parsedBody.data;
+      const newShift = await storage.createShift(shiftData);
+      
+      res.status(201).json(newShift);
+    } catch (error) {
+      console.error("Error creating shift:", error);
+      res.status(500).json({ message: "Failed to create shift" });
+    }
+  });
+
+  app.put("/api/shifts/:id", async (req, res) => {
+    try {
+      const shiftId = Number(req.params.id);
+      const parsedBody = insertShiftSchema.partial().safeParse(req.body);
+      if (!parsedBody.success) {
+        return res.status(400).json({ 
+          message: "Invalid shift data", 
+          errors: parsedBody.error.errors 
+        });
+      }
+      
+      const shiftData = parsedBody.data;
+      const updatedShift = await storage.updateShift(shiftId, shiftData);
+      
+      if (!updatedShift) {
+        return res.status(404).json({ message: "Shift not found" });
+      }
+      
+      res.json(updatedShift);
+    } catch (error) {
+      console.error("Error updating shift:", error);
+      res.status(500).json({ message: "Failed to update shift" });
+    }
+  });
+
+  app.delete("/api/shifts/:id", async (req, res) => {
+    try {
+      const shiftId = Number(req.params.id);
+      const deleted = await storage.deleteShift(shiftId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Shift not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting shift:", error);
+      res.status(500).json({ message: "Failed to delete shift" });
     }
   });
 
