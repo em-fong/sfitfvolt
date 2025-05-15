@@ -16,6 +16,7 @@ export default function Home() {
 
   const { data: events, isLoading, error } = useQuery<(Event & {volunteerCount: number})[]>({
     queryKey: ['/api/events'],
+    refetchInterval: 60000, // Refetch data every minute to update event status
   });
 
   // Update current time every minute

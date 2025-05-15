@@ -123,6 +123,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const eventId = Number(req.params.eventId);
       const shifts = await storage.getShifts(eventId);
+      
+      // Sort shifts by date and time
+      shifts.sort((a, b) => {
+        const dateCompare = new Date(a.shiftDate).getTime() - new Date(b.shiftDate).getTime();
+        if (dateCompare !== 0) return dateCompare;
+        
+        // If same date, sort by start time
+        return a.startTime.localeCompare(b.startTime);
+      });
+      
       res.json(shifts);
     } catch (error) {
       console.error("Error fetching shifts:", error);

@@ -221,8 +221,8 @@ export default function CreateShifts() {
         variant: "default",
       });
 
-      // Navigate back to the event page
-      navigate(`/`);
+      // Navigate to the confirmation page
+      navigate(`/events/${eventId}/confirmation`);
     } catch (error) {
       console.error('Error creating shifts:', error);
       toast({
