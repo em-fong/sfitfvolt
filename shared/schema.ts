@@ -1,12 +1,18 @@
 import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
+// Users schema
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
 });
+
+export const usersRelations = relations(users, ({ many }) => ({
+  events: many(events),
+}));
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -24,6 +30,10 @@ export const events = pgTable("events", {
   time: text("time").notNull(),
   location: text("location").notNull(),
 });
+
+export const eventsRelations = relations(events, ({ many }) => ({
+  volunteers: many(volunteers),
+}));
 
 export const insertEventSchema = createInsertSchema(events).pick({
   name: true,
@@ -50,6 +60,13 @@ export const volunteers = pgTable("volunteers", {
   checkInTime: timestamp("check_in_time"),
   checkedInBy: text("checked_in_by"),
 });
+
+export const volunteersRelations = relations(volunteers, ({ one }) => ({
+  event: one(events, {
+    fields: [volunteers.eventId],
+    references: [events.id],
+  }),
+}));
 
 export const insertVolunteerSchema = createInsertSchema(volunteers).pick({
   name: true,
