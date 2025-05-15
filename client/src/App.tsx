@@ -7,12 +7,14 @@ import Home from "@/pages/Home";
 import VolunteerList from "@/pages/VolunteerList";
 import VolunteerDetail from "@/pages/VolunteerDetail";
 import Confirmation from "@/pages/Confirmation";
+import CreateEvent from "@/pages/CreateEvent";
 import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/create-event" component={CreateEvent} />
       <Route path="/events/:eventId/volunteers" component={VolunteerList} />
       <Route path="/events/:eventId/volunteers/:volunteerId" component={VolunteerDetail} />
       <Route path="/events/:eventId/volunteers/:volunteerId/confirmation" component={Confirmation} />

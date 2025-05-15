@@ -2,6 +2,7 @@ import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
+import { insertEventSchema } from "../shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes
@@ -94,6 +95,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedVolunteer);
     } catch (error) {
       res.status(500).json({ message: "Failed to check in volunteer" });
+    }
+  });
+  
+  app.post("/api/events", async (req, res) => {
+    try {
+      const parsedBody = insertEventSchema.safeParse(req.body);
+      if (!parsedBody.success) {
+        return res.status(400).json({ 
+          message: "Invalid event data", 
+          errors: parsedBody.error.errors 
+        });
+      }
+      
+      const eventData = parsedBody.data;
+      const newEvent = await storage.createEvent(eventData);
+      
+      res.status(201).json(newEvent);
+    } catch (error) {
+      console.error("Error creating event:", error);
+      res.status(500).json({ message: "Failed to create event" });
     }
   });
 

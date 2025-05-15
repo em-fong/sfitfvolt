@@ -36,11 +36,7 @@ export default function CreateEvent() {
   const onSubmit = async (data: CreateEventFormValues) => {
     setIsLoading(true);
     try {
-      await apiRequest('/api/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
+      await apiRequest('POST', '/api/events', data);
 
       // Invalidate the events query to refresh the data
       await queryClient.invalidateQueries({ queryKey: ['/api/events'] });
