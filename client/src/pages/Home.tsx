@@ -1,19 +1,25 @@
 import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import EventCard from "@/components/EventCard";
 import { type Event } from "@shared/schema";
-import { useAppAuth } from "@/components/AuthProvider";
-import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
 
 export default function Home() {
-  const { user, logout } = useAppAuth();
+  const { toast } = useToast();
   const [_, navigate] = useLocation();
 
   const { data: events, isLoading, error } = useQuery<(Event & {volunteerCount: number})[]>({
     queryKey: ['/api/events'],
   });
+
+  if (error) {
+    toast({
+      title: "Error",
+      description: "Failed to load events. Please try again.",
+      variant: "destructive",
+    });
+  }
 
   const handleSelectEvent = (eventId: number) => {
     navigate(`/events/${eventId}/volunteers`);
@@ -21,22 +27,9 @@ export default function Home() {
 
   return (
     <div className="px-4 py-6">
-      <header className="mb-6 flex flex-col">
-        <div className="flex justify-between items-center mb-1">
-          <h1 className="text-2xl font-bold text-foreground">Volunteer Organizer</h1>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={logout}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <LogOut className="h-4 w-4 mr-1" />
-            <span className="text-sm">Logout</span>
-          </Button>
-        </div>
-        <p className="text-gray-500 text-sm">
-          Welcome, {user?.claims?.first_name || user?.username || 'User'}
-        </p>
+      <header className="mb-6">
+        <h1 className="text-2xl font-bold text-foreground">Volunteer Organizer</h1>
+        <p className="text-gray-500 text-sm">Select an event to manage volunteers</p>
       </header>
 
       <div className="event-list space-y-4">

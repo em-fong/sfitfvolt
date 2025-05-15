@@ -3,7 +3,6 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/components/AuthProvider";
 import Home from "@/pages/Home";
 import VolunteerList from "@/pages/VolunteerList";
 import VolunteerDetail from "@/pages/VolunteerDetail";
@@ -29,9 +28,7 @@ function App() {
         <div className="bg-background min-h-screen">
           <div className="max-w-md mx-auto pb-24 relative min-h-screen">
             <Toaster />
-            <AuthProvider>
-              <Router />
-            </AuthProvider>
+            <Router />
           </div>
         </div>
       </TooltipProvider>
