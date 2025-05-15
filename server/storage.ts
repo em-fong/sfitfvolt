@@ -91,9 +91,9 @@ export class MemStorage implements IStorage {
         team: "South Area",
         shirtSize: "Large",
         dietaryNeeds: "None",
-        checkedIn: true,
-        checkInTime: new Date(),
-        checkedInBy: "Volunteer Admin"
+        checkedIn: false,
+        checkInTime: undefined,
+        checkedInBy: undefined
       },
       {
         name: "Jessica Smith",
@@ -115,9 +115,9 @@ export class MemStorage implements IStorage {
         team: "Kitchen",
         shirtSize: "XL",
         dietaryNeeds: "None",
-        checkedIn: true,
-        checkInTime: new Date(),
-        checkedInBy: "Volunteer Admin"
+        checkedIn: false,
+        checkInTime: undefined,
+        checkedInBy: undefined
       },
       {
         name: "Emily Wilson",
