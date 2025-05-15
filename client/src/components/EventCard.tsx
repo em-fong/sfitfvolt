@@ -4,17 +4,26 @@ import { Calendar, Clock, MapPin, ArrowRight, User } from "lucide-react";
 interface EventCardProps {
   event: Event & { volunteerCount: number };
   onSelect: () => void;
+  isCurrent?: boolean;
 }
 
-export default function EventCard({ event, onSelect }: EventCardProps) {
+export default function EventCard({ event, onSelect, isCurrent = false }: EventCardProps) {
   return (
     <div 
-      className="event-card bg-card rounded-lg shadow-sm border border-gray-100 p-4 transition-all hover:shadow-md active:bg-gray-50 cursor-pointer"
+      className={`event-card bg-card rounded-lg shadow-sm border ${isCurrent ? 'border-green-200' : 'border-gray-100'} p-4 transition-all hover:shadow-md active:bg-gray-50 cursor-pointer`}
       onClick={onSelect}
     >
       <div className="flex justify-between items-start">
         <div>
-          <h3 className="font-semibold text-foreground">{event.name}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-foreground">{event.name}</h3>
+            {isCurrent && (
+              <span className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded-full flex items-center">
+                <span className="inline-block w-1.5 h-1.5 bg-green-500 rounded-full mr-1 animate-pulse"></span>
+                Live
+              </span>
+            )}
+          </div>
           <div className="flex items-center mt-1 text-sm text-gray-500">
             <Calendar className="h-3.5 w-3.5 mr-1" />
             <span>{event.date}</span>
@@ -27,7 +36,7 @@ export default function EventCard({ event, onSelect }: EventCardProps) {
             <span>{event.location}</span>
           </div>
         </div>
-        <span className="bg-primary-50 text-primary-600 text-xs font-medium px-2.5 py-1 rounded-full">
+        <span className={`${isCurrent ? 'bg-green-50 text-green-700' : 'bg-primary-50 text-primary-600'} text-xs font-medium px-2.5 py-1 rounded-full`}>
           {event.volunteerCount} volunteers
         </span>
       </div>
