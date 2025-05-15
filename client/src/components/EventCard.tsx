@@ -5,12 +5,17 @@ interface EventCardProps {
   event: Event & { volunteerCount: number };
   onSelect: () => void;
   isCurrent?: boolean;
+  isPast?: boolean;
 }
 
-export default function EventCard({ event, onSelect, isCurrent = false }: EventCardProps) {
+export default function EventCard({ event, onSelect, isCurrent = false, isPast = false }: EventCardProps) {
   return (
     <div 
-      className={`event-card bg-card rounded-lg shadow-sm border ${isCurrent ? 'border-green-200' : 'border-gray-100'} p-4 transition-all hover:shadow-md active:bg-gray-50 cursor-pointer`}
+      className={`event-card bg-card rounded-lg shadow-sm border 
+        ${isCurrent ? 'border-green-200' : isPast ? 'border-gray-200' : 'border-gray-100'} 
+        p-4 transition-all hover:shadow-md active:bg-gray-50 cursor-pointer
+        ${isPast ? 'bg-gray-50' : ''}
+      `}
       onClick={onSelect}
     >
       <div className="flex justify-between items-start">
@@ -21,6 +26,11 @@ export default function EventCard({ event, onSelect, isCurrent = false }: EventC
               <span className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded-full flex items-center">
                 <span className="inline-block w-1.5 h-1.5 bg-green-500 rounded-full mr-1 animate-pulse"></span>
                 Active
+              </span>
+            )}
+            {isPast && (
+              <span className="bg-gray-100 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded-full">
+                Past
               </span>
             )}
           </div>
