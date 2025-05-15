@@ -14,46 +14,49 @@ import { cn } from "@/lib/utils";
 import { Calendar as CalendarIcon, Clock } from "lucide-react";
 import { format } from "date-fns";
 
-// Form validation schema with start and end dates
+// Form validation schema with multiple selected dates
 const formSchema = z.object({
   name: z.string().min(1, "Event name is required"),
-  startDate: z.date({
-    required_error: "Please select a start date",
-  }),
-  endDate: z.date({
-    required_error: "Please select an end date",
-  }),
+  selectedDates: z.array(z.date()).min(1, "Please select at least one date"),
   startTime: z.string().min(1, "Start time is required"),
   endTime: z.string().min(1, "End time is required"),
   location: z.string().min(1, "Location is required"),
-}).refine((data) => {
-  // Ensure end date is not before start date
-  return data.endDate >= data.startDate;
-}, {
-  message: "End date cannot be before start date",
-  path: ["endDate"],
 });
 
 // Form values type
 type FormValues = z.infer<typeof formSchema>;
 
+// Helper function to format dates in ascending order
+const formatSelectedDates = (dates: Date[]): string => {
+  if (!dates || dates.length === 0) return "";
+  
+  // Sort dates in ascending order
+  const sortedDates = [...dates].sort((a, b) => a.getTime() - b.getTime());
+  
+  if (sortedDates.length === 1) {
+    // Single date
+    return format(sortedDates[0], "MMMM d, yyyy");
+  } else if (sortedDates.length === 2) {
+    // Two dates: show them as a range
+    return `${format(sortedDates[0], "MMMM d, yyyy")} to ${format(sortedDates[1], "MMMM d, yyyy")}`;
+  } else {
+    // Multiple non-consecutive dates: list with commas
+    const formattedDates = sortedDates.map(date => format(date, "MMMM d, yyyy"));
+    return formattedDates.join(", ");
+  }
+};
+
 // Convert form values to the format expected by the API
 const convertFormValuesToApiData = (data: FormValues) => {
-  // Format the start and end dates to "Month Day, Year" format
-  const formattedStartDate = format(data.startDate, "MMMM d, yyyy");
-  const formattedEndDate = format(data.endDate, "MMMM d, yyyy");
+  // Format the selected dates
+  const formattedDates = formatSelectedDates(data.selectedDates);
   
   // Format the time range
   const timeRange = `${data.startTime} - ${data.endTime}`;
   
-  // Format the date range (if start and end dates are different)
-  const dateRange = formattedStartDate === formattedEndDate 
-    ? formattedStartDate 
-    : `${formattedStartDate} to ${formattedEndDate}`;
-  
   return {
     name: data.name,
-    date: dateRange,
+    date: formattedDates,
     time: timeRange,
     location: data.location
   };
@@ -128,8 +131,7 @@ export default function CreateEvent() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      startDate: new Date(),
-      endDate: new Date(),
+      selectedDates: [new Date()],
       startTime: "",
       endTime: "",
       location: ""
@@ -199,102 +201,68 @@ export default function CreateEvent() {
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium">
-              Start Date
-            </label>
-            <Controller
-              control={control}
-              name="startDate"
-              render={({ field }) => (
-                <div className="grid gap-2">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        id="startDate"
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !field.value && "text-muted-foreground",
-                          errors.startDate && "border-red-500"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Select start date</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) =>
-                          date < new Date(new Date().setHours(0, 0, 0, 0))
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              )}
-            />
-            {errors.startDate && (
-              <p className="text-red-500 text-xs">{errors.startDate.message}</p>
+        <div className="space-y-2">
+          <label className="block text-sm font-medium">
+            Event Dates
+          </label>
+          <Controller
+            control={control}
+            name="selectedDates"
+            render={({ field }) => (
+              <div className="grid gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="dates"
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        (!field.value || field.value.length === 0) && "text-muted-foreground",
+                        errors.selectedDates && "border-red-500"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {field.value && field.value.length > 0 ? (
+                        <span>
+                          {field.value.length === 1
+                            ? format(field.value[0], "PPP")
+                            : field.value.length === 2
+                              ? `${format(field.value[0], "PPP")} to ${format(field.value[1], "PPP")}`
+                              : `${field.value.length} dates selected`}
+                        </span>
+                      ) : (
+                        <span>Select event dates</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="multiple"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) =>
+                        date < new Date(new Date().setHours(0, 0, 0, 0))
+                      }
+                      initialFocus
+                      numberOfMonths={2}
+                    />
+                    <div className="p-3 border-t border-border">
+                      <div className="text-sm text-muted-foreground">
+                        {field.value && field.value.length > 0
+                          ? field.value.length === 1
+                            ? "1 day selected"
+                            : `${field.value.length} days selected`
+                          : "Select multiple days"}
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
             )}
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-medium">
-              End Date
-            </label>
-            <Controller
-              control={control}
-              name="endDate"
-              render={({ field }) => (
-                <div className="grid gap-2">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        id="endDate"
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !field.value && "text-muted-foreground",
-                          errors.endDate && "border-red-500"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Select end date</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) =>
-                          date < new Date(new Date().setHours(0, 0, 0, 0))
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              )}
-            />
-            {errors.endDate && (
-              <p className="text-red-500 text-xs">{errors.endDate.message}</p>
-            )}
-          </div>
+          />
+          {errors.selectedDates && (
+            <p className="text-red-500 text-xs">{errors.selectedDates.message}</p>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
