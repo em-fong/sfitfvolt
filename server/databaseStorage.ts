@@ -1,10 +1,11 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "./db";
 import { IStorage } from "./storage";
 import { 
   users, type User, type InsertUser,
   events, type Event, type InsertEvent,
-  volunteers, type Volunteer, type InsertVolunteer
+  volunteers, type Volunteer, type InsertVolunteer,
+  shifts, type Shift, type InsertShift
 } from "@shared/schema";
 
 export class DatabaseStorage implements IStorage {
@@ -94,5 +95,58 @@ export class DatabaseStorage implements IStorage {
     const pending = total - checkedIn;
 
     return { total, checkedIn, pending };
+  }
+
+  // Shift methods
+  async getShifts(eventId: number): Promise<Shift[]> {
+    return await db
+      .select()
+      .from(shifts)
+      .where(eq(shifts.eventId, eventId));
+  }
+
+  async getShift(id: number): Promise<Shift | undefined> {
+    const [shift] = await db
+      .select()
+      .from(shifts)
+      .where(eq(shifts.id, id));
+    return shift || undefined;
+  }
+
+  async getShiftsByDate(eventId: number, shiftDate: Date): Promise<Shift[]> {
+    return await db
+      .select()
+      .from(shifts)
+      .where(and(
+        eq(shifts.eventId, eventId),
+        eq(shifts.shiftDate, shiftDate)
+      ));
+  }
+
+  async createShift(insertShift: InsertShift): Promise<Shift> {
+    const [shift] = await db
+      .insert(shifts)
+      .values(insertShift)
+      .returning();
+    return shift;
+  }
+
+  async updateShift(id: number, updates: Partial<InsertShift>): Promise<Shift | undefined> {
+    const [updatedShift] = await db
+      .update(shifts)
+      .set(updates)
+      .where(eq(shifts.id, id))
+      .returning();
+    
+    return updatedShift || undefined;
+  }
+
+  async deleteShift(id: number): Promise<boolean> {
+    const [deletedShift] = await db
+      .delete(shifts)
+      .where(eq(shifts.id, id))
+      .returning();
+    
+    return !!deletedShift;
   }
 }

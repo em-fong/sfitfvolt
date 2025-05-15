@@ -1,7 +1,8 @@
 import { 
   users, type User, type InsertUser,
   events, type Event, type InsertEvent,
-  volunteers, type Volunteer, type InsertVolunteer
+  volunteers, type Volunteer, type InsertVolunteer,
+  shifts, type Shift, type InsertShift
 } from "@shared/schema";
 import { DatabaseStorage } from "./databaseStorage";
 
@@ -23,6 +24,14 @@ export interface IStorage {
   updateVolunteer(id: number, volunteer: Partial<InsertVolunteer>): Promise<Volunteer | undefined>;
   checkInVolunteer(id: number, checkedInBy: string): Promise<Volunteer | undefined>;
   getEventStats(eventId: number): Promise<{ total: number, checkedIn: number, pending: number }>;
+  
+  // Shift methods
+  getShifts(eventId: number): Promise<Shift[]>;
+  getShift(id: number): Promise<Shift | undefined>;
+  getShiftsByDate(eventId: number, shiftDate: Date): Promise<Shift[]>;
+  createShift(shift: InsertShift): Promise<Shift>;
+  updateShift(id: number, shift: Partial<InsertShift>): Promise<Shift | undefined>;
+  deleteShift(id: number): Promise<boolean>;
 }
 
 // Seed demo data

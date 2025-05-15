@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -33,6 +33,7 @@ export const events = pgTable("events", {
 
 export const eventsRelations = relations(events, ({ many }) => ({
   volunteers: many(volunteers),
+  shifts: many(shifts),
 }));
 
 export const insertEventSchema = createInsertSchema(events).pick({
@@ -84,3 +85,35 @@ export const insertVolunteerSchema = createInsertSchema(volunteers).pick({
 
 export type InsertVolunteer = z.infer<typeof insertVolunteerSchema>;
 export type Volunteer = typeof volunteers.$inferSelect;
+
+// Shifts schema
+export const shifts = pgTable("shifts", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").notNull(),
+  shiftDate: date("shift_date").notNull(),
+  startTime: text("start_time").notNull(),
+  endTime: text("end_time").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  maxVolunteers: integer("max_volunteers").default(0),
+});
+
+export const shiftsRelations = relations(shifts, ({ one }) => ({
+  event: one(events, {
+    fields: [shifts.eventId],
+    references: [events.id],
+  }),
+}));
+
+export const insertShiftSchema = createInsertSchema(shifts).pick({
+  eventId: true,
+  shiftDate: true,
+  startTime: true,
+  endTime: true,
+  title: true,
+  description: true,
+  maxVolunteers: true,
+});
+
+export type InsertShift = z.infer<typeof insertShiftSchema>;
+export type Shift = typeof shifts.$inferSelect;
