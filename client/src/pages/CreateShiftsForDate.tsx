@@ -64,18 +64,19 @@ const TimePicker = ({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
-          <div className="max-h-80 overflow-y-auto p-2">
+          <div className="max-h-60 overflow-y-auto p-2">
             {times.map((time) => (
-              <Button
+              <div
                 key={time}
-                variant="ghost"
-                className="w-full justify-start"
+                className={`cursor-pointer rounded-md px-4 py-2 text-sm hover:bg-gray-100 ${
+                  value === time ? "bg-gray-100 font-medium" : ""
+                }`}
                 onClick={() => {
                   onChange(time);
                 }}
               >
                 {time}
-              </Button>
+              </div>
             ))}
           </div>
         </PopoverContent>
@@ -376,31 +377,34 @@ export default function CreateShiftsForDate() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Controller
-                    control={control}
-                    name={`shifts.${index}.startTime`}
-                    render={({ field }) => (
-                      <TimePicker
-                        label="Start Time"
-                        value={field.value}
-                        onChange={field.onChange}
-                        error={errors.shifts?.[index]?.startTime?.message}
-                      />
-                    )}
-                  />
-
-                  <Controller
-                    control={control}
-                    name={`shifts.${index}.endTime`}
-                    render={({ field }) => (
-                      <TimePicker
-                        label="End Time"
-                        value={field.value}
-                        onChange={field.onChange}
-                        error={errors.shifts?.[index]?.endTime?.message}
-                      />
-                    )}
-                  />
+                  <div className="w-full">
+                    <Controller
+                      control={control}
+                      name={`shifts.${index}.startTime`}
+                      render={({ field }) => (
+                        <TimePicker
+                          label="Start Time"
+                          value={field.value}
+                          onChange={field.onChange}
+                          error={errors.shifts?.[index]?.startTime?.message}
+                        />
+                      )}
+                    />
+                  </div>
+                  <div className="w-full">
+                    <Controller
+                      control={control}
+                      name={`shifts.${index}.endTime`}
+                      render={({ field }) => (
+                        <TimePicker
+                          label="End Time"
+                          value={field.value}
+                          onChange={field.onChange}
+                          error={errors.shifts?.[index]?.endTime?.message}
+                        />
+                      )}
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
