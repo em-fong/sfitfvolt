@@ -103,6 +103,7 @@ export default function CreateShifts() {
     date: string;
     time: string;
     location: string;
+    rawDates?: string; // Pipe-separated list of dates in ISO format
   }
 
   // Fetch event details
@@ -118,13 +119,30 @@ export default function CreateShifts() {
 
   // Parse event dates if available
   useEffect(() => {
-    if (event?.date) {
-      try {
+    if (!event) return;
+    
+    try {
+      // First try to use the rawDates field if available (more precise)
+      if (event.rawDates) {
+        const rawDatesList = event.rawDates.split('|');
+        const parsedDates = rawDatesList.map(dateStr => new Date(dateStr));
+        
+        if (parsedDates.length > 0) {
+          // Sort dates in ascending order
+          const sortedDates = parsedDates.sort((a, b) => a.getTime() - b.getTime());
+          setSelectedDates(sortedDates);
+          setSelectedDate(sortedDates[0]); // Set first date as selected by default
+          return; // Exit early if we successfully parsed raw dates
+        }
+      }
+      
+      // Fallback to parsing the display date format if rawDates isn't available
+      if (event.date) {
         // Check if it's a date range (contains "to")
         if (event.date.includes('to')) {
           const [startDateStr, endDateStr] = event.date.split('to').map(d => d.trim());
           
-          // Create dates array from start to end (assumes dates within a month range)
+          // Create dates array from start to end
           const startDate = new Date(startDateStr);
           const endDate = new Date(endDateStr);
           
@@ -152,14 +170,14 @@ export default function CreateShifts() {
           setSelectedDates([date]);
           setSelectedDate(date);
         }
-      } catch (error) {
-        console.error("Error parsing dates:", error);
-        toast({
-          title: "Error",
-          description: "Could not parse event dates",
-          variant: "destructive",
-        });
       }
+    } catch (error) {
+      console.error("Error parsing dates:", error);
+      toast({
+        title: "Error",
+        description: "Could not parse event dates",
+        variant: "destructive",
+      });
     }
   }, [event, toast]);
 
@@ -297,7 +315,7 @@ export default function CreateShifts() {
                 onClick={() => setSelectedDate(date)}
                 className="mb-2"
               >
-                {format(date, "MMM d, yyyy")}
+                {format(date, "EEE, MMM d")}
               </Button>
             ))}
           </div>
