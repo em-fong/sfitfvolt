@@ -186,13 +186,15 @@ export default function Home() {
     setPastEvents(past);
   }, [events, currentTime]);
 
-  if (error) {
-    toast({
-      title: "Error",
-      description: "Failed to load events. Please try again.",
-      variant: "destructive",
-    });
-  }
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load events. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [error, toast]);
 
   const handleSelectEvent = (eventId: number) => {
     navigate(`/events/${eventId}/volunteers`);
