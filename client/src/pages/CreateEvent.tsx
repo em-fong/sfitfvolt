@@ -163,8 +163,8 @@ export default function CreateEvent() {
         variant: "default",
       });
 
-      // Navigate to the create shifts page for this event
-      navigate(`/events/${newEvent.id}/create-shifts`);
+      // Navigate to the create shifts page for the first date
+      navigate(`/events/${newEvent.id}/create-shifts/0`);
     } catch (error) {
       console.error('Error creating event:', error);
       toast({
