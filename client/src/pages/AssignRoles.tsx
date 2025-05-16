@@ -130,6 +130,15 @@ export default function AssignRoles() {
       return dateStr;
     }
   };
+  
+  // Format date for button display (shorter)
+  const formatDateShort = (dateStr: string) => {
+    try {
+      return format(new Date(dateStr), 'EEE, MMM d');
+    } catch (e) {
+      return dateStr;
+    }
+  };
 
   // Toggle role assignment for a shift
   const toggleRoleAssignment = (shiftId: number, roleId: number) => {
@@ -331,7 +340,7 @@ export default function AssignRoles() {
                   }}
                   className="mb-2"
                 >
-                  {formatDate(date)}
+                  {formatDateShort(date)}
                 </Button>
               ))}
             </div>

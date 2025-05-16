@@ -97,7 +97,8 @@ export default function CreateShifts() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   
-  // We don't need the shiftsPerDate state - each date submission will be independent
+  // Track created shifts for each date to display on the AssignRoles page
+  const [createdShifts, setCreatedShifts] = useState<Record<string, boolean>>({});
 
   interface EventResponse {
     id: number;
@@ -303,6 +304,14 @@ export default function CreateShifts() {
       <p className="text-gray-600 mb-6">
         For event: <span className="font-medium">{event.name}</span>
       </p>
+      
+      <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+        <p className="text-sm text-blue-700">
+          <strong>Note:</strong> Create shifts for each date of your event by selecting a date and creating shifts. 
+          Click "Save Shifts for [date]" to save shifts for the current date. You can then select another date to create more shifts.
+          All saved shifts will be available on the Assign Roles page.
+        </p>
+      </div>
 
       {selectedDates.length > 0 && (
         <div className="mb-6">
