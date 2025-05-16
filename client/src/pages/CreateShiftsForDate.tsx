@@ -497,11 +497,8 @@ export default function CreateShiftsForDate() {
             type="button" 
             variant="outline" 
             onClick={() => {
-              if (dateIndex > 0) {
-                navigate(`/events/${eventId}/create-shifts/${dateIndex - 1}`);
-              } else {
-                navigate(`/events/${eventId}/create-shifts`);
-              }
+              navigate(`/create-event/`);
+
             }}
             disabled={isLoading}
           >
