@@ -334,13 +334,13 @@ export default function CreateShiftsForDate() {
     <div className="p-6 max-w-4xl mx-auto">
       <div className="mb-6">
         <button 
-          onClick={() => navigate(`/events/${eventId}/create-event`)}
+          onClick={() => navigate(`/`)}
           className="flex items-center text-sm text-gray-600 hover:text-gray-900"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
             <path d="m15 18-6-6 6-6"></path>
           </svg>
-          Back to Event Details
+          Back to Home
         </button>
       </div>
 
