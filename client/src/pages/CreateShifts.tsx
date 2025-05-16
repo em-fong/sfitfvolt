@@ -315,8 +315,20 @@ export default function CreateShifts() {
                 key={index}
                 variant={selectedDate && date.getTime() === selectedDate.getTime() ? "default" : "outline"}
                 onClick={() => {
-                  // Switch to this date
+                  // Switch to this date and reset form fields to ensure shifts are specific to this date
                   setSelectedDate(date);
+                  // Clear the form for the new date selection
+                  reset({
+                    shifts: [
+                      {
+                        title: "",
+                        startTime: "",
+                        endTime: "",
+                        description: "",
+                        maxVolunteers: 0,
+                      }
+                    ]
+                  });
                 }}
                 className="mb-2"
               >
