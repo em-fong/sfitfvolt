@@ -174,7 +174,7 @@ export default function CreateRoles() {
       }
       
       // Then, create all the shift-role assignments
-      const assignments = [];
+      const assignments: { shiftId: number; roleId: number }[] = [];
       
       // Convert Map entries to array for compatibility
       Array.from(shiftRoleAssignments.entries()).forEach(([shiftId, roleIds]) => {
