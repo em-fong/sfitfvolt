@@ -97,8 +97,8 @@ export default function CreateShifts() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   
-  // Track created shifts for each date to display on the AssignRoles page
-  const [createdShifts, setCreatedShifts] = useState<Record<string, boolean>>({});
+  // Track shifts being created for each date
+  const [shiftsPerDate, setShiftsPerDate] = useState<Record<string, any[]>>({});
 
   interface EventResponse {
     id: number;
@@ -184,7 +184,7 @@ export default function CreateShifts() {
     }
   }, [event, toast]);
   
-  const { control, handleSubmit, formState: { errors }, reset } = useForm<ShiftsFormValues>({
+  const { control, handleSubmit, formState: { errors }, reset, getValues } = useForm<ShiftsFormValues>({
     resolver: zodResolver(shiftsFormSchema),
     defaultValues: {
       shifts: [
@@ -307,9 +307,17 @@ export default function CreateShifts() {
       
       <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
         <p className="text-sm text-blue-700">
-          <strong>Note:</strong> Create shifts for each date of your event by selecting a date and creating shifts. 
-          Click "Save Shifts for [date]" to save shifts for the current date. You can then select another date to create more shifts.
-          All saved shifts will be available on the Assign Roles page.
+          <strong>Important:</strong> To create shifts for multiple dates:
+        </p>
+        <ol className="text-sm text-blue-700 list-decimal ml-5 mt-2">
+          <li>Select a date and create shifts for that date</li>
+          <li>Click "Save and Continue" to save these shifts to the database</li> 
+          <li>On the next page, click "Back" to return here</li>
+          <li>Select another date and create more shifts</li>
+          <li>Continue this process until you've created shifts for all dates</li>
+        </ol>
+        <p className="text-sm text-blue-700 mt-2">
+          All shifts you save will be available on the Assign Roles page.
         </p>
       </div>
 
@@ -324,9 +332,12 @@ export default function CreateShifts() {
                 key={index}
                 variant={selectedDate && date.getTime() === selectedDate.getTime() ? "default" : "outline"}
                 onClick={() => {
-                  // Switch to this date and reset form fields to ensure shifts are specific to this date
+                  // Simply change the selected date
+                  // We're not going to try to save form states between date switches
+                  // as it complicates things and can lead to data loss
                   setSelectedDate(date);
-                  // Clear the form for the new date selection
+                  
+                  // Reset the form to a clean state for this date
                   reset({
                     shifts: [
                       {
