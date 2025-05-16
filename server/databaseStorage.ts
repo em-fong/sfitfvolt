@@ -5,7 +5,9 @@ import {
   users, type User, type InsertUser,
   events, type Event, type InsertEvent,
   volunteers, type Volunteer, type InsertVolunteer,
-  shifts, type Shift, type InsertShift
+  shifts, type Shift, type InsertShift,
+  roles, type Role, type InsertRole,
+  shiftRoles, type ShiftRole, type InsertShiftRole
 } from "@shared/schema";
 
 export class DatabaseStorage implements IStorage {
@@ -155,5 +157,110 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return !!deletedShift;
+  }
+  
+  // Role methods
+  async getRoles(eventId: number): Promise<Role[]> {
+    return db.select().from(roles).where(eq(roles.eventId, eventId));
+  }
+
+  async getRole(id: number): Promise<Role | undefined> {
+    const [role] = await db.select().from(roles).where(eq(roles.id, id));
+    return role || undefined;
+  }
+
+  async createRole(insertRole: InsertRole): Promise<Role> {
+    const [role] = await db.insert(roles).values(insertRole).returning();
+    return role;
+  }
+
+  async updateRole(id: number, updates: Partial<InsertRole>): Promise<Role | undefined> {
+    const [updatedRole] = await db
+      .update(roles)
+      .set(updates)
+      .where(eq(roles.id, id))
+      .returning();
+    
+    return updatedRole || undefined;
+  }
+
+  async deleteRole(id: number): Promise<boolean> {
+    // First delete any shift role associations
+    await db
+      .delete(shiftRoles)
+      .where(eq(shiftRoles.roleId, id));
+      
+    // Then delete the role
+    const [deletedRole] = await db
+      .delete(roles)
+      .where(eq(roles.id, id))
+      .returning();
+    
+    return !!deletedRole;
+  }
+  
+  // ShiftRole methods
+  async getShiftRoles(shiftId: number): Promise<(ShiftRole & { role: Role })[]> {
+    // Get all shift-role associations for this shift
+    const shiftRoleEntries = await db
+      .select()
+      .from(shiftRoles)
+      .where(eq(shiftRoles.shiftId, shiftId));
+    
+    // Create an array to store the result with role information
+    const result: (ShiftRole & { role: Role })[] = [];
+    
+    // For each shift-role, fetch the associated role and combine the data
+    for (const sr of shiftRoleEntries) {
+      const [role] = await db
+        .select()
+        .from(roles)
+        .where(eq(roles.id, sr.roleId));
+      
+      if (role) {
+        result.push({
+          ...sr,
+          role
+        });
+      }
+    }
+    
+    return result;
+  }
+
+  async assignRoleToShift(insertShiftRole: InsertShiftRole): Promise<ShiftRole> {
+    // Check if this role is already assigned to this shift
+    const existing = await db
+      .select()
+      .from(shiftRoles)
+      .where(and(
+        eq(shiftRoles.shiftId, insertShiftRole.shiftId),
+        eq(shiftRoles.roleId, insertShiftRole.roleId)
+      ));
+    
+    // If it exists, return the existing entry
+    if (existing.length > 0) {
+      return existing[0];
+    }
+    
+    // Otherwise, create a new assignment
+    const [shiftRole] = await db
+      .insert(shiftRoles)
+      .values(insertShiftRole)
+      .returning();
+    
+    return shiftRole;
+  }
+
+  async removeRoleFromShift(shiftId: number, roleId: number): Promise<boolean> {
+    const [deleted] = await db
+      .delete(shiftRoles)
+      .where(and(
+        eq(shiftRoles.shiftId, shiftId),
+        eq(shiftRoles.roleId, roleId)
+      ))
+      .returning();
+    
+    return !!deleted;
   }
 }

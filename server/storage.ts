@@ -2,7 +2,9 @@ import {
   users, type User, type InsertUser,
   events, type Event, type InsertEvent,
   volunteers, type Volunteer, type InsertVolunteer,
-  shifts, type Shift, type InsertShift
+  shifts, type Shift, type InsertShift,
+  roles, type Role, type InsertRole,
+  shiftRoles, type ShiftRole, type InsertShiftRole
 } from "@shared/schema";
 import { DatabaseStorage } from "./databaseStorage";
 
