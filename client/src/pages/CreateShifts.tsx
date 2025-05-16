@@ -221,8 +221,8 @@ export default function CreateShifts() {
         variant: "default",
       });
 
-      // Navigate to the confirmation page
-      navigate(`/events/${eventId}/confirmation`);
+      // Navigate to the roles page
+      navigate(`/events/${eventId}/create-roles`);
     } catch (error) {
       console.error('Error creating shifts:', error);
       toast({
