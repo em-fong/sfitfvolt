@@ -500,7 +500,7 @@ export default function CreateShiftsForDate() {
               if (dateIndex > 0) {
                 navigate(`/events/${eventId}/create-shifts/${dateIndex - 1}`);
               } else {
-                navigate(`/events/${eventId}/create-event`);
+                navigate(`/events/${eventId}/create-shifts`);
               }
             }}
             disabled={isLoading}
