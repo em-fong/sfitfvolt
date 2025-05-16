@@ -2,7 +2,7 @@ import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { insertEventSchema, insertShiftSchema } from "../shared/schema";
+import { insertEventSchema, insertShiftSchema, insertRoleSchema, insertShiftRoleSchema } from "../shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes
@@ -230,6 +230,146 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting shift:", error);
       res.status(500).json({ message: "Failed to delete shift" });
+    }
+  });
+  
+  // Role endpoints
+  app.get("/api/events/:eventId/roles", async (req, res) => {
+    try {
+      const eventId = Number(req.params.eventId);
+      const roles = await storage.getRoles(eventId);
+      res.json(roles);
+    } catch (error) {
+      console.error("Error fetching roles:", error);
+      res.status(500).json({ message: "Failed to fetch roles" });
+    }
+  });
+  
+  app.get("/api/roles/:id", async (req, res) => {
+    try {
+      const roleId = Number(req.params.id);
+      const role = await storage.getRole(roleId);
+      
+      if (!role) {
+        return res.status(404).json({ message: "Role not found" });
+      }
+      
+      res.json(role);
+    } catch (error) {
+      console.error("Error fetching role:", error);
+      res.status(500).json({ message: "Failed to fetch role" });
+    }
+  });
+  
+  app.post("/api/roles", async (req, res) => {
+    try {
+      const parsedBody = insertRoleSchema.safeParse(req.body);
+      if (!parsedBody.success) {
+        return res.status(400).json({ 
+          message: "Invalid role data", 
+          errors: parsedBody.error.errors 
+        });
+      }
+      
+      const roleData = parsedBody.data;
+      const newRole = await storage.createRole(roleData);
+      
+      res.status(201).json(newRole);
+    } catch (error) {
+      console.error("Error creating role:", error);
+      res.status(500).json({ message: "Failed to create role" });
+    }
+  });
+  
+  app.patch("/api/roles/:id", async (req, res) => {
+    try {
+      const roleId = Number(req.params.id);
+      const role = await storage.getRole(roleId);
+      
+      if (!role) {
+        return res.status(404).json({ message: "Role not found" });
+      }
+      
+      // Validate the update data
+      const updateData = req.body;
+      const updatedRole = await storage.updateRole(roleId, updateData);
+      
+      res.json(updatedRole);
+    } catch (error) {
+      console.error("Error updating role:", error);
+      res.status(500).json({ message: "Failed to update role" });
+    }
+  });
+  
+  app.delete("/api/roles/:id", async (req, res) => {
+    try {
+      const roleId = Number(req.params.id);
+      const role = await storage.getRole(roleId);
+      
+      if (!role) {
+        return res.status(404).json({ message: "Role not found" });
+      }
+      
+      const success = await storage.deleteRole(roleId);
+      
+      if (success) {
+        res.status(204).end();
+      } else {
+        res.status(500).json({ message: "Failed to delete role" });
+      }
+    } catch (error) {
+      console.error("Error deleting role:", error);
+      res.status(500).json({ message: "Failed to delete role" });
+    }
+  });
+  
+  // ShiftRole endpoints
+  app.get("/api/shifts/:shiftId/roles", async (req, res) => {
+    try {
+      const shiftId = Number(req.params.shiftId);
+      const shiftRoles = await storage.getShiftRoles(shiftId);
+      res.json(shiftRoles);
+    } catch (error) {
+      console.error("Error fetching shift roles:", error);
+      res.status(500).json({ message: "Failed to fetch shift roles" });
+    }
+  });
+  
+  app.post("/api/shift-roles", async (req, res) => {
+    try {
+      const parsedBody = insertShiftRoleSchema.safeParse(req.body);
+      if (!parsedBody.success) {
+        return res.status(400).json({ 
+          message: "Invalid shift-role assignment data", 
+          errors: parsedBody.error.errors 
+        });
+      }
+      
+      const shiftRoleData = parsedBody.data;
+      const newShiftRole = await storage.assignRoleToShift(shiftRoleData);
+      
+      res.status(201).json(newShiftRole);
+    } catch (error) {
+      console.error("Error assigning role to shift:", error);
+      res.status(500).json({ message: "Failed to assign role to shift" });
+    }
+  });
+  
+  app.delete("/api/shifts/:shiftId/roles/:roleId", async (req, res) => {
+    try {
+      const shiftId = Number(req.params.shiftId);
+      const roleId = Number(req.params.roleId);
+      
+      const success = await storage.removeRoleFromShift(shiftId, roleId);
+      
+      if (success) {
+        res.status(204).end();
+      } else {
+        res.status(404).json({ message: "Shift-role association not found" });
+      }
+    } catch (error) {
+      console.error("Error removing role from shift:", error);
+      res.status(500).json({ message: "Failed to remove role from shift" });
     }
   });
 

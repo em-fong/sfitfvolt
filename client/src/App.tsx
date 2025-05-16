@@ -9,6 +9,7 @@ import VolunteerDetail from "@/pages/VolunteerDetail";
 import Confirmation from "@/pages/Confirmation";
 import CreateEvent from "@/pages/CreateEvent";
 import CreateShifts from "@/pages/CreateShifts";
+import CreateRoles from "@/pages/CreateRoles";
 import EventConfirmation from "@/pages/EventConfirmation";
 import NotFound from "@/pages/not-found";
 
@@ -18,6 +19,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/create-event" component={CreateEvent} />
       <Route path="/events/:eventId/create-shifts" component={CreateShifts} />
+      <Route path="/events/:eventId/create-roles" component={CreateRoles} />
       <Route path="/events/:eventId/confirmation" component={EventConfirmation} />
       <Route path="/events/:eventId/volunteers" component={VolunteerList} />
       <Route path="/events/:eventId/volunteers/:volunteerId" component={VolunteerDetail} />
