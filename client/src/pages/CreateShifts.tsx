@@ -96,6 +96,9 @@ export default function CreateShifts() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  
+  // Store shift forms for each date separately
+  const [shiftsPerDate, setShiftsPerDate] = useState<Record<string, ShiftFormValues[]>>({});
 
   interface EventResponse {
     id: number;
@@ -181,7 +184,7 @@ export default function CreateShifts() {
     }
   }, [event, toast]);
 
-  const { control, handleSubmit, formState: { errors } } = useForm<ShiftsFormValues>({
+  const { control, handleSubmit, formState: { errors }, getValues, reset } = useForm<ShiftsFormValues>({
     resolver: zodResolver(shiftsFormSchema),
     defaultValues: {
       shifts: [
@@ -312,7 +315,40 @@ export default function CreateShifts() {
               <Button
                 key={index}
                 variant={selectedDate && date.getTime() === selectedDate.getTime() ? "default" : "outline"}
-                onClick={() => setSelectedDate(date)}
+                onClick={() => {
+                  // Save current shifts data for the current date if it exists
+                  if (selectedDate) {
+                    const currentValues = getValues();
+                    const dateKey = selectedDate.toISOString().split('T')[0];
+                    setShiftsPerDate(prev => ({
+                      ...prev,
+                      [dateKey]: currentValues.shifts
+                    }));
+                  }
+                  
+                  // Set the new selected date
+                  setSelectedDate(date);
+                  
+                  // Retrieve any existing shifts for the new date or use default
+                  const dateKey = date.toISOString().split('T')[0];
+                  const savedShifts = shiftsPerDate[dateKey];
+                  
+                  if (savedShifts && savedShifts.length > 0) {
+                    reset({ shifts: savedShifts });
+                  } else {
+                    reset({
+                      shifts: [
+                        {
+                          title: "",
+                          startTime: "",
+                          endTime: "",
+                          description: "",
+                          maxVolunteers: 0,
+                        }
+                      ]
+                    });
+                  }
+                }}
                 className="mb-2"
               >
                 {format(date, "EEE, MMM d")}
