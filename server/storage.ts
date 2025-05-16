@@ -32,6 +32,18 @@ export interface IStorage {
   createShift(shift: InsertShift): Promise<Shift>;
   updateShift(id: number, shift: Partial<InsertShift>): Promise<Shift | undefined>;
   deleteShift(id: number): Promise<boolean>;
+  
+  // Role methods
+  getRoles(eventId: number): Promise<Role[]>;
+  getRole(id: number): Promise<Role | undefined>;
+  createRole(role: InsertRole): Promise<Role>;
+  updateRole(id: number, role: Partial<InsertRole>): Promise<Role | undefined>;
+  deleteRole(id: number): Promise<boolean>;
+  
+  // ShiftRole methods
+  getShiftRoles(shiftId: number): Promise<(ShiftRole & { role: Role })[]>;
+  assignRoleToShift(shiftRole: InsertShiftRole): Promise<ShiftRole>;
+  removeRoleFromShift(shiftId: number, roleId: number): Promise<boolean>;
 }
 
 // Seed demo data

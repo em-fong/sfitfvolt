@@ -31,10 +31,8 @@ export const events = pgTable("events", {
   location: text("location").notNull(),
 });
 
-export const eventsRelations = relations(events, ({ many }) => ({
-  volunteers: many(volunteers),
-  shifts: many(shifts),
-}));
+// This will be defined after all tables are declared
+let eventsRelationsTemp: any;
 
 export const insertEventSchema = createInsertSchema(events).pick({
   name: true,
@@ -98,12 +96,8 @@ export const shifts = pgTable("shifts", {
   maxVolunteers: integer("max_volunteers").default(0),
 });
 
-export const shiftsRelations = relations(shifts, ({ one }) => ({
-  event: one(events, {
-    fields: [shifts.eventId],
-    references: [events.id],
-  }),
-}));
+// Will define this after all tables are declared
+let shiftsRelationsTemp: any;
 
 export const insertShiftSchema = createInsertSchema(shifts).pick({
   eventId: true,
@@ -117,3 +111,72 @@ export const insertShiftSchema = createInsertSchema(shifts).pick({
 
 export type InsertShift = z.infer<typeof insertShiftSchema>;
 export type Shift = typeof shifts.$inferSelect;
+
+// Roles schema
+export const roles = pgTable("roles", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+});
+
+// Will define this after all tables are declared
+let rolesRelationsTemp: any;
+
+export const insertRoleSchema = createInsertSchema(roles).pick({
+  eventId: true,
+  name: true,
+  description: true,
+});
+
+export type InsertRole = z.infer<typeof insertRoleSchema>;
+export type Role = typeof roles.$inferSelect;
+
+// ShiftRoles join table to associate roles with shifts
+export const shiftRoles = pgTable("shift_roles", {
+  id: serial("id").primaryKey(),
+  shiftId: integer("shift_id").notNull(),
+  roleId: integer("role_id").notNull(),
+});
+
+export const shiftRolesRelations = relations(shiftRoles, ({ one }) => ({
+  shift: one(shifts, {
+    fields: [shiftRoles.shiftId],
+    references: [shifts.id],
+  }),
+  role: one(roles, {
+    fields: [shiftRoles.roleId],
+    references: [roles.id],
+  }),
+}));
+
+export const insertShiftRoleSchema = createInsertSchema(shiftRoles).pick({
+  shiftId: true,
+  roleId: true,
+});
+
+export type InsertShiftRole = z.infer<typeof insertShiftRoleSchema>;
+export type ShiftRole = typeof shiftRoles.$inferSelect;
+
+// Now we can define all relations after all tables are declared
+export const eventsRelations = relations(events, ({ many }) => ({
+  volunteers: many(volunteers),
+  shifts: many(shifts),
+  roles: many(roles),
+}));
+
+export const shiftsRelations = relations(shifts, ({ one, many }) => ({
+  event: one(events, {
+    fields: [shifts.eventId],
+    references: [events.id],
+  }),
+  shiftRoles: many(shiftRoles),
+}));
+
+export const rolesRelations = relations(roles, ({ one, many }) => ({
+  event: one(events, {
+    fields: [roles.eventId],
+    references: [events.id],
+  }),
+  shiftRoles: many(shiftRoles),
+}));
