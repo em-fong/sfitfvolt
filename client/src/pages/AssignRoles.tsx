@@ -39,6 +39,7 @@ export default function AssignRoles() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedShiftId, setSelectedShiftId] = useState<number | null>(null);
   const [shiftRoleAssignments, setShiftRoleAssignments] = useState<Map<number, Set<number>>>(new Map());
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   
   // Fetch event details
   const { data: event } = useQuery({
@@ -94,12 +95,32 @@ export default function AssignRoles() {
     fetchExistingAssignments();
   }, [shifts, roles]);
   
-  // Select the first shift by default when shifts are loaded
-  useEffect(() => {
-    if (shifts.length > 0 && !selectedShiftId) {
-      setSelectedShiftId(shifts[0].id);
+  // Group shifts by date
+  const shiftsByDate = shifts.reduce((acc: Record<string, Shift[]>, shift) => {
+    const dateStr = shift.shiftDate;
+    if (!acc[dateStr]) {
+      acc[dateStr] = [];
     }
-  }, [shifts]);
+    acc[dateStr].push(shift);
+    return acc;
+  }, {});
+
+  // Get unique dates from shifts
+  const availableDates = Object.keys(shiftsByDate).sort();
+
+  // Select the first date by default when shifts are loaded
+  useEffect(() => {
+    if (availableDates.length > 0 && !selectedDate) {
+      setSelectedDate(availableDates[0]);
+    }
+  }, [availableDates]);
+
+  // Select the first shift of the selected date by default
+  useEffect(() => {
+    if (selectedDate && shiftsByDate[selectedDate]?.length > 0 && !selectedShiftId) {
+      setSelectedShiftId(shiftsByDate[selectedDate][0].id);
+    }
+  }, [selectedDate, shiftsByDate]);
   
   // Format date for display
   const formatDate = (dateStr: string) => {
@@ -142,7 +163,6 @@ export default function AssignRoles() {
     
     try {
       // First, remove all existing assignments
-      // This is a simplification - in a real app, you might want to calculate the difference
       for (const shift of shifts) {
         try {
           const existingRoles = await apiRequest<Array<{role: Role}>>('GET', `/api/shifts/${shift.id}/roles`);
@@ -297,69 +317,103 @@ export default function AssignRoles() {
           <CardTitle className="text-lg">Assign Roles</CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue={shifts[0]?.id.toString()} onValueChange={(value) => setSelectedShiftId(Number(value))}>
-            <ScrollArea className="h-12 w-full">
-              <TabsList className="w-full justify-start">
-                {shifts.map((shift) => (
-                  <TabsTrigger key={shift.id} value={shift.id.toString()} className="whitespace-nowrap">
-                    {shift.title}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </ScrollArea>
-            
-            {shifts.map((shift) => (
-              <TabsContent key={shift.id} value={shift.id.toString()}>
-                <div className="mb-4">
-                  <div className="flex items-start mb-1">
-                    <Calendar className="h-4 w-4 mr-2 mt-0.5 text-gray-500" />
-                    <span>{formatDate(shift.shiftDate)}</span>
-                  </div>
-                  <div className="flex items-start mb-1">
-                    <Clock className="h-4 w-4 mr-2 mt-0.5 text-gray-500" />
-                    <span>{shift.startTime} - {shift.endTime}</span>
-                  </div>
-                  {shift.description && (
-                    <p className="text-sm text-gray-600 mt-2">{shift.description}</p>
-                  )}
-                </div>
-                
-                <Separator className="my-3" />
-                
-                <div className="mt-6">
-                  <h3 className="text-base font-medium mb-4">Available Roles</h3>
-                  
-                  <div className="space-y-3">
-                    {roles.map((role) => (
-                      <div key={role.id} className="flex items-start space-x-2">
-                        <Checkbox 
-                          id={`role-${role.id}-shift-${shift.id}`}
-                          checked={isRoleAssignedToShift(shift.id, role.id)}
-                          onCheckedChange={() => toggleRoleAssignment(shift.id, role.id)}
-                          className="mt-1"
-                        />
-                        <div className="space-y-1">
-                          <label 
-                            htmlFor={`role-${role.id}-shift-${shift.id}`}
-                            className="text-sm font-medium leading-none cursor-pointer"
-                          >
-                            {role.name}
-                          </label>
-                          {role.description && (
-                            <p className="text-xs text-gray-500">{role.description}</p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {roles.length === 0 && (
-                      <p className="text-sm text-gray-500">No roles available. Please create roles first.</p>
+          {/* Date selector */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Select Date</label>
+            <div className="flex flex-wrap gap-2">
+              {availableDates.map((date) => (
+                <Button
+                  key={date}
+                  variant={selectedDate === date ? "default" : "outline"}
+                  onClick={() => {
+                    setSelectedDate(date);
+                    setSelectedShiftId(null);
+                  }}
+                  className="mb-2"
+                >
+                  {formatDate(date)}
+                </Button>
+              ))}
+            </div>
+          </div>
+          
+          {/* No shifts message */}
+          {selectedDate && shiftsByDate[selectedDate]?.length === 0 && (
+            <div className="p-6 text-center">
+              <p className="text-gray-600">No shifts available for this date.</p>
+            </div>
+          )}
+          
+          {/* Shifts for selected date */}
+          {selectedDate && shiftsByDate[selectedDate]?.length > 0 && (
+            <Tabs 
+              defaultValue={shiftsByDate[selectedDate][0]?.id.toString()} 
+              value={selectedShiftId?.toString()}
+              onValueChange={(value) => setSelectedShiftId(Number(value))}
+            >
+              <ScrollArea className="h-12 w-full">
+                <TabsList className="w-full justify-start">
+                  {shiftsByDate[selectedDate].map((shift) => (
+                    <TabsTrigger key={shift.id} value={shift.id.toString()} className="whitespace-nowrap">
+                      {shift.title} <span className="ml-1 text-xs text-gray-500">({shift.startTime}-{shift.endTime})</span>
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </ScrollArea>
+              
+              {shiftsByDate[selectedDate].map((shift) => (
+                <TabsContent key={shift.id} value={shift.id.toString()}>
+                  <div className="mb-4">
+                    <div className="flex items-start mb-1">
+                      <Calendar className="h-4 w-4 mr-2 mt-0.5 text-gray-500" />
+                      <span>{formatDate(shift.shiftDate)}</span>
+                    </div>
+                    <div className="flex items-start mb-1">
+                      <Clock className="h-4 w-4 mr-2 mt-0.5 text-gray-500" />
+                      <span>{shift.startTime} - {shift.endTime}</span>
+                    </div>
+                    {shift.description && (
+                      <p className="text-sm text-gray-600 mt-2">{shift.description}</p>
                     )}
                   </div>
-                </div>
-              </TabsContent>
-            ))}
-          </Tabs>
+                  
+                  <Separator className="my-3" />
+                  
+                  <div className="mt-6">
+                    <h3 className="text-base font-medium mb-4">Available Roles</h3>
+                    
+                    <div className="space-y-3">
+                      {roles.map((role) => (
+                        <div key={role.id} className="flex items-start space-x-2">
+                          <Checkbox 
+                            id={`role-${role.id}-shift-${shift.id}`}
+                            checked={isRoleAssignedToShift(shift.id, role.id)}
+                            onCheckedChange={() => toggleRoleAssignment(shift.id, role.id)}
+                            className="mt-1"
+                          />
+                          <div className="space-y-1">
+                            <label 
+                              htmlFor={`role-${role.id}-shift-${shift.id}`}
+                              className="text-sm font-medium leading-none cursor-pointer"
+                            >
+                              {role.name}
+                            </label>
+                            {role.description && (
+                              <p className="text-xs text-gray-500">{role.description}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {roles.length === 0 && (
+                        <p className="text-sm text-gray-500">No roles available. Please create roles first.</p>
+                      )}
+                    </div>
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
+          )}
         </CardContent>
       </Card>
       
