@@ -29,6 +29,7 @@ export const events = pgTable("events", {
   date: text("date").notNull(),
   time: text("time").notNull(),
   location: text("location").notNull(),
+  rawDates: text("raw_dates"), // Store ISO dates in pipe-separated format for precise parsing
 });
 
 // This will be defined after all tables are declared
@@ -39,6 +40,7 @@ export const insertEventSchema = createInsertSchema(events).pick({
   date: true,
   time: true,
   location: true,
+  rawDates: true,
 });
 
 export type InsertEvent = z.infer<typeof insertEventSchema>;

@@ -48,7 +48,13 @@ const formatSelectedDates = (dates: Date[]): string => {
 
 // Convert form values to the format expected by the API
 const convertFormValuesToApiData = (data: FormValues) => {
-  // Format the selected dates
+  // Sort dates in ascending order for consistent display
+  const sortedDates = [...data.selectedDates].sort((a, b) => a.getTime() - b.getTime());
+  
+  // Format each date separately to maintain consistency
+  const formattedDatesList = sortedDates.map(date => format(date, "yyyy-MM-dd"));
+  
+  // Format the selected dates for display (uses comma-separated format)
   const formattedDates = formatSelectedDates(data.selectedDates);
   
   // Format the time range
@@ -57,6 +63,8 @@ const convertFormValuesToApiData = (data: FormValues) => {
   return {
     name: data.name,
     date: formattedDates,
+    // Store raw dates in ISO format for precise parsing
+    rawDates: formattedDatesList.join('|'),
     time: timeRange,
     location: data.location
   };
