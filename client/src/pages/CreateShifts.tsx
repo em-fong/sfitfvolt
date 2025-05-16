@@ -12,6 +12,23 @@ import { Clock, Plus, Trash2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
+// Time conversion function for comparing times
+const timeToMinutes = (timeStr: string): number => {
+  const [hourStr, minuteStr] = timeStr.split(':');
+  let hour = parseInt(hourStr, 10);
+  const minute = parseInt(minuteStr.split(' ')[0], 10);
+  const isPM = timeStr.includes('PM') && hour !== 12;
+  const isAM = timeStr.includes('AM') && hour === 12;
+  
+  if (isPM) {
+    hour += 12;
+  } else if (isAM) {
+    hour = 0;
+  }
+  
+  return hour * 60 + minute;
+};
+
 // Form validation schema for shifts
 const shiftSchema = z.object({
   title: z.string().min(1, "Shift title is required"),
@@ -19,7 +36,22 @@ const shiftSchema = z.object({
   endTime: z.string().min(1, "End time is required"),
   description: z.string().optional(),
   maxVolunteers: z.number().int().min(0, "Must be at least 0"),
-});
+}).refine(
+  (data) => {
+    if (!data.startTime || !data.endTime) {
+      return true; // Let the individual field validations handle empty fields
+    }
+    
+    const startMinutes = timeToMinutes(data.startTime);
+    const endMinutes = timeToMinutes(data.endTime);
+    
+    return endMinutes > startMinutes;
+  },
+  {
+    message: "End time must be after start time",
+    path: ["endTime"],
+  }
+);
 
 const shiftsFormSchema = z.object({
   shifts: z.array(shiftSchema).min(1, "At least one shift is required"),
