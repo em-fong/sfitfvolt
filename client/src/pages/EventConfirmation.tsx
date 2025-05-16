@@ -195,13 +195,13 @@ export default function EventConfirmation() {
     <div className="px-4 py-6 max-w-lg mx-auto">
       <div className="mb-6">
         <button 
-          onClick={() => navigate(`/events/${eventId}/create-roles`)}
+          onClick={() => navigate(`/events/${eventId}/assign-roles`)}
           className="flex items-center text-sm text-gray-600 hover:text-gray-900"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
             <path d="m15 18-6-6 6-6"></path>
           </svg>
-          Back to Roles
+          Back to Assign Roles
         </button>
       </div>
 
