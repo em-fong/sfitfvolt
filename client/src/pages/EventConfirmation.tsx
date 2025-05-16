@@ -318,10 +318,10 @@ export default function EventConfirmation() {
       <div className="flex justify-between items-center">
         <Button 
           variant="outline" 
-          onClick={() => navigate(`/events/${eventId}/create-roles`)}
+          onClick={() => navigate(`/events/${eventId}/assign-roles`)}
           disabled={isPublishing}
         >
-          Edit Roles
+          Edit Role Assignments
         </Button>
         
         <Button 
